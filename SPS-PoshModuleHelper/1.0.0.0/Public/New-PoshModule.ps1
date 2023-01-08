@@ -26,12 +26,14 @@ Function New-PoshModule {
             Position = 4,
             Mandatory = $False
         )]
-        [String] ${Author} = 'Swiss Powershell',
+        # [String] ${Author} = 'Swiss Powershell',
+        [String] ${Author} = "$($Env:UserName)",
         [Parameter(
             Position = 5,
             Mandatory = $False
         )]
-        [String] ${CompanyName} = 'SwissPowershell',
+        # [String] ${CompanyName} = 'SwissPowershell',
+        [String] ${CompanyName} = "$($Author)'s Company",
         [Parameter(
             Position = 6,
             Mandatory = $False
@@ -423,11 +425,11 @@ Set-StrictMode -Version 'Latest'
         #endregion create debug file
         #region create public example file
         Write-Verbose 'Create Module public example file...'
-        New-PoshModuleFunctionFile -Name 'New-Example' -Path $PublicExampleFileFullName -Public -Minimal:$Minimal
+        New-PoshModuleFunctionFile -Name 'New-Example' -Path $PublicExampleFileFullName -Public -Minimal:$Minimal -Author $Author
         #endregion create public example file
         #region create private example file
         Write-Verbose 'Create Module private example file...'
-        New-PoshModuleFunctionFile -Name 'New-Example' -Path $PrivateExampleFileFullName -Minimal:$Minimal
+        New-PoshModuleFunctionFile -Name 'New-Example' -Path $PrivateExampleFileFullName -Minimal:$Minimal -Author $Author
         #endregion create private example file
         #region create Enum example file
         Write-Verbose 'Create Module Enum example file...'
@@ -441,14 +443,14 @@ Set-StrictMode -Version 'Latest'
         ForEach($Function in $Functions) {
             $PublicFunctionFileFullName = "$($PublicSubFullName)\$($Function).ps1"
             Write-Verbose "Create public '$($Function)' function file..."
-            New-PoshModuleFunctionFile -Path $PublicFunctionFileFullName -Name $Function -Public -Minimal:$Minimal
+            New-PoshModuleFunctionFile -Path $PublicFunctionFileFullName -Name $Function -Public -Minimal:$Minimal -Author $Author
         }
         #endregion create the public functions
         #region create the private functions
         ForEach($Function in $PrivateFunctions) {
             $PrivateFunctionFileFullName = "$($PrivateSubFullName)\$($Function).ps1"
             Write-Verbose "Create private '$($Function)' function file..."
-            New-PoshModuleFunctionFile -Path $PrivateFunctionFileFullName -Name $Function -Minimal:$Minimal
+            New-PoshModuleFunctionFile -Path $PrivateFunctionFileFullName -Name $Function -Minimal:$Minimal -Author $Author
         }
         #endregion create the private functions
         #region create the Enums

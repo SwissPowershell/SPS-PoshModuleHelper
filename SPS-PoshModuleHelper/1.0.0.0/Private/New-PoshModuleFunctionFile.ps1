@@ -17,9 +17,14 @@ Function New-PoshModuleFunctionFile {
             Position = 2,
             Mandatory = $False
         )]
-        [Switch] ${Public},
+        [String] ${Author},
         [Parameter(
             Position = 3,
+            Mandatory = $False
+        )]
+        [Switch] ${Public},
+        [Parameter(
+            Position = 4,
             Mandatory = $False
         )]
         [Switch] ${Minimal}
@@ -72,7 +77,7 @@ Function New-PoshModuleFunctionFile {
             Set-Item
 
         .NOTES
-            Written by Swiss Powershell
+            Written by $($Author)
     #>
 "@
         $FunctionContent = @'        

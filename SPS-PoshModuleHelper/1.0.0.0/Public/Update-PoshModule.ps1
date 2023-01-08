@@ -51,17 +51,17 @@ Function Update-PoshModule {
             Position = 7,
             Mandatory = $False
         )]
-        [String[]] ${AddClasses},
+        [String[]] ${AddEnums},
         [Parameter(
-            Position = 8,
+            Position = 7,
             Mandatory = $False
         )]
-        [String[]] ${AddEnums},
+        [String[]] ${AddClasses},
         [Parameter(
             Position = 9,
             Mandatory = $False
         )]
-        [Switch] ${Keep},
+        [Switch] ${Clear},
         [Parameter(
             Position = 10,
             Mandatory = $False
@@ -88,6 +88,7 @@ Function Update-PoshModule {
             Throw "Unable to identify module '$($Name)' in available module list"
         }Else{
             Write-Verbose "Module identified in version '$($SourceModule.Version.ToString())'"
+            [String] ${Author} = $SourceModule | Select-Object -ExpandProperty 'Author'
         }
         #endregion identify source module
         #region find module path
@@ -313,13 +314,13 @@ Function Update-PoshModule {
         #region add public function file
         ForEach ($Function in $AddFunctions) {
             $FunctionPath = "$($TargetPath)\$($PublicSubName)\$($Function).ps1"
-            New-PoshModuleFunctionFile -Path $FunctionPath -Name $Function -Public -Minimal:$Minimal
+            New-PoshModuleFunctionFile -Path $FunctionPath -Name $Function -Public -Minimal:$Minimal -Author $Author
         }
         #endregion add public function file
         #region add private function file
         ForEach ($Function in $AddPrivateFunctions) {
             $FunctionPath = "$($TargetPath)\$($PrivateSubName)\$($Function).ps1"
-            New-PoshModuleFunctionFile -Path $FunctionPath -Name $Function -Minimal:$Minimal
+            New-PoshModuleFunctionFile -Path $FunctionPath -Name $Function -Minimal:$Minimal -Author $Author
         }
         #endregion add private function file
         #region add Enum file
@@ -339,6 +340,11 @@ Function Update-PoshModule {
         Write-Verbose "Updating manifest in '$($ManifestFileFullName)'"
         Update-PoshModuleManifest -Manifest $ManifestFileFullName -Version $Version -AddFunctions $AddFunctions
         #endregion update manifest file
+        #region remove the previous module
+        if ($Clear -eq $True) {
+            Write-Host 'The Clear Switch has not yet been implemented'
+        }
+        #endregion remove the previous module
     }
     END {
         #region Function closing  DO NOT REMOVE
