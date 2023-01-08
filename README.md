@@ -10,19 +10,19 @@
   
   Folder Structure :
 
-    ├── *ModuleName*            # Name of the module
-      ├── *Version*             # Version of the module
+    ├── *ModuleName*\           # Name of the module
+      ├── *Version*\            # Version of the module
         ├── Debug.ps1           # A debug file usefull to test the module
         ├── *ModuleName*.psd1   # A module definition file
         ├── *ModuleName*.psm1   # A module file
-          ├── Public            # Folder hosting *public* functions
-            ├── _Example.ps1    # Example ps1 to help you build your own
-          ├── Private           # Folder hosting *private* functions
-            ├── _Example.ps1    # Example ps1 to help you build your own
-          ├── Enum              # Folder hosting *enum* functions
-            ├── _Example.ps1    # Example ps1 to help you build your own
-          ├── Class             # Folder hosting *class* functions
-            ├── _Example.ps1    # Example ps1 to help you build your own
+        ├── Public\             # Folder hosting *public* functions
+          ├── _Example.ps1      # Example ps1 to help you build your own
+        ├── Private\            # Folder hosting *private* functions
+          ├── _Example.ps1      # Example ps1 to help you build your own
+        ├── Enum\               # Folder hosting *enum* functions
+          ├── _Example.ps1      # Example ps1 to help you build your own
+        ├── Class\              # Folder hosting *class* functions
+          ├── _Example.ps1      # Example ps1 to help you build your own
 
   * Add given Public functions under \\Public\\*FunctionName*.ps1 and register them
   * Add given Private functions under \\Private\\*FunctionName*.ps1
