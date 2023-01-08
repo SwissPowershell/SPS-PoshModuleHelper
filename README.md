@@ -6,7 +6,9 @@
  ## New-PoshModule
   An helper to create powershell module
   
-    * Create the module skeleton
+  * Create the module skeleton
+  
+  Folder Structure :
 
     ├── *ModuleName*            # Name of the module
       ├── *Version*             # Version of the module
@@ -22,22 +24,22 @@
           ├── Class             # Folder hosting *class* functions
             ├── _Example.ps1    # Example ps1 to help you build your own
 
-    * Add given Public functions under \\Public\\*FunctionName*.ps1 and register them
-    * Add given Private functions under \\Private\\*FunctionName*.ps1
-    * Add given Enum under \\Enum\\*EnumName*.ps1
-    * Add given Class under \\Class\\*ClassName*.ps1
+  * Add given Public functions under \\Public\\*FunctionName*.ps1 and register them
+  * Add given Private functions under \\Private\\*FunctionName*.ps1
+  * Add given Enums under \\Enum\\*EnumName*.ps1
+  * Add given Classes under \\Class\\*ClassName*.ps1
 
 ### Examples
   `PS> New-Poshmodule -Name 'MyNewPoshModule'`
   * Create a powershell module under user module directory 
-    * **Windows Powershell** : C:\\Users\\*USER*\\Documents\\WindowsPowerShell\\Modules\\
-    * **Powershell Core** : C:\\Users\\*USER*\\Documents\\PowerShell\\Modules\\
+    * **Windows Powershell** : C:\\Users\\*USER*\\Documents\\WindowsPowerShell\\Modules\\MyNewPoshModule\\1.0.0.0\\
+    * **Powershell Core** : C:\\Users\\*USER*\\Documents\\PowerShell\\Modules\\MyNewPoshModule\\1.0.0.0\\
 
 ### Examples
   `PS> New-Poshmodule -Name 'MyNewPoshModule' -Global`
   * Create a powershell module under Global module directory 
-    * **Windows Powershell** : C:\\Program Files\\WindowsPowerShell\\Modules\\
-    * **Powershell Core** : C:\\Program Files\\PowerShell\\7\\Modules\\
+    * **Windows Powershell** : C:\\Program Files\\WindowsPowerShell\\Modules\\MyNewPoshModule\\1.0.0.0\\
+    * **Powershell Core** : C:\\Program Files\\PowerShell\\7\\Modules\\MyNewPoshModule\\1.0.0.0\\
     
 ### Parameters
 
@@ -183,11 +185,11 @@
 ## Update-PoshModule
   An helper to update powershell module
 
-    * Duplicate the module and upgrade the version
-    * Add given Public functions under \\Public\\*FunctionName*.ps1 and register them
-    * Add given Private functions under \\Private\\*FunctionName*.ps1
-    * Add given Enum under \\Enum\\*EnumName*.ps1
-    * Add given Class under \\Class\\*ClassName*.ps1
+  * Duplicate the module and upgrade the version
+  * Add given Public functions under \\Public\\*FunctionName*.ps1 and register them
+  * Add given Private functions under \\Private\\*FunctionName*.ps1
+  * Add given Enum under \\Enum\\*EnumName*.ps1
+  * Add given Class under \\Class\\*ClassName*.ps1
 
 ### Examples
 
