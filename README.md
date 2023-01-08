@@ -5,19 +5,23 @@
 
  ## New-PoshModule
   An helper to create powershell module
-  * Create the a Module skeleton
-    * \\*ModuleName*\\*Version*
-        * \\Debug.ps1
-        * \\*ModuleName*.psd1
-        * \\*ModuleName*.psm1
-        * \\Public
-            * \\_Example.ps1
-        * \\Private
-            * \\_Example.ps1
-        * \\Enum
-            * \\_Example.ps1
-        * \\Class
-            * \\_Example.ps1
+  
+    * Create the module skeleton
+
+    ├── *ModuleName*            # Name of the module
+      ├── *Version*             # Version of the module
+        ├── Debug.ps1           # A debug file usefull to test the module
+        ├── *ModuleName*.psd1   # A module definition file
+        ├── *ModuleName*.psm1   # A module file
+          ├── Public            # Folder hosting *public* functions
+            ├── _Example.ps1    # Example ps1 to help you build your own
+          ├── Private           # Folder hosting *private* functions
+            ├── _Example.ps1    # Example ps1 to help you build your own
+          ├── Enum              # Folder hosting *enum* functions
+            ├── _Example.ps1    # Example ps1 to help you build your own
+          ├── Class             # Folder hosting *class* functions
+            ├── _Example.ps1    # Example ps1 to help you build your own
+
     * Add given Public functions under \\Public\\*FunctionName*.ps1 and register them
     * Add given Private functions under \\Private\\*FunctionName*.ps1
     * Add given Enum under \\Enum\\*EnumName*.ps1
@@ -178,11 +182,12 @@
 
 ## Update-PoshModule
   An helper to update powershell module
-  * Duplicate the module and upgrade the version
-  * Add given Public functions under \\Public\\*FunctionName*.ps1 and register them
-  * Add given Private functions under \\Private\\*FunctionName*.ps1
-  * Add given Enum under \\Enum\\*EnumName*.ps1
-  * Add given Class under \\Class\\*ClassName*.ps1
+
+    * Duplicate the module and upgrade the version
+    * Add given Public functions under \\Public\\*FunctionName*.ps1 and register them
+    * Add given Private functions under \\Private\\*FunctionName*.ps1
+    * Add given Enum under \\Enum\\*EnumName*.ps1
+    * Add given Class under \\Class\\*ClassName*.ps1
 
 ### Examples
 
@@ -302,6 +307,7 @@
       * Machine Powershell Core : *C:\\**%ProgramFiles%**\\PowerShell\\7\\Modules\\*
       * Machine Windows Powershell : *C:\\**%ProgramFiles%**\\WindowsPowerShell\\Modules\\*
   
+
   * **-Minimal**
     * **Mandatory** : False
     * **Type** : Switch
