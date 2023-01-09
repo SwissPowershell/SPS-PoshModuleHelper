@@ -347,8 +347,10 @@ $ModuleVersion = Split-Path -Path $CurrPath -leaf
 $ModuleName = Split-Path -Path $(Split-Path -Path $CurrPath) -leaf
 Remove-Module -Name $ModuleName -Verbose:$False -ErrorAction SilentlyContinue
 Import-Module -Name $ModuleName -MinimumVersion $ModuleVersion -Verbose:$False
+
 #region PROGRAM
-$Start = Get-Date
+$ProgramStart = Get-Date
+
 Write-Host "============================= START ==============================" -Foregroundcolor Magenta
 
 ###############################################
@@ -356,7 +358,9 @@ Write-Host "============================= START ==============================" 
 ###############################################
 
 Write-Host "============================== END ===============================" -Foregroundcolor Magenta
-Write-Host "The program took : $($TimeSpent.TotalSeconds)ms to execute" -foregroundColor Yellow
+$TimeSpentInProgram = New-TimeSpan -Start $ProgramStart
+Write-Host "The program took : $($TimeSpentInProgram.TotalMilliseconds)ms to execute" -foregroundColor Yellow
+
 #endregion PROGRAM
 '@
         if ($VerboseDebug -eq $True) {
