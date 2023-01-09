@@ -38,7 +38,7 @@ Function New-PoshModule {
             Position = 6,
             Mandatory = $False
         )]
-        [String] ${Copyright} = "(c) $([DateTime]::Now | Select-Object -ExpandProperty Year) $($CompanyName). All rights reserved.",        
+        [String] ${Copyright} = "(c) $([DateTime]::Now | Select-Object -ExpandProperty Year) $($CompanyName). All rights reserved.",
         [Parameter(
             Position = 7,
             Mandatory = $False
@@ -79,7 +79,7 @@ Function New-PoshModule {
             Position = 14,
             Mandatory = $False
         )]
-        [Switch] ${Minimal}        
+        [Switch] ${Minimal}
     )
     BEGIN {
         #region Function initialisation DO NOT REMOVE
@@ -144,7 +144,7 @@ Function New-PoshModule {
             Write-Verbose "Searching if $($Name) exist in available module"
             $ExistAsAvailable = $($AllModules | Select-Object -ExpandProperty 'Name') -contains $Name
         }
-        
+
         if ($ExistAsSub -eq $True) {
             Throw "A module named '$($Name)' has been found in modules subdir, please use Update-PSModule to update the module"
         }Elseif ($ExistAsAvailable -eq $True) {
@@ -235,7 +235,7 @@ Function New-PoshModule {
             }
             $PrivateFunctions = $NewPrivateFunctionList
         }
-        
+
         #endregion validate that the private functions are valid and unique
         #region validate Enums are unique
         if ($AddEnums.Count -gt 0) {
@@ -337,7 +337,7 @@ ForEach ($PS1 in $ClassPS1) {
 '@
         #endregion Module psm1 file content
         #region debug file content
-        
+
         $DebugFileContent = @'
 # Correcting verbose color
 $Host.PrivateData.VerboseForegroundColor = 'Cyan'
@@ -347,6 +347,17 @@ $ModuleVersion = Split-Path -Path $CurrPath -leaf
 $ModuleName = Split-Path -Path $(Split-Path -Path $CurrPath) -leaf
 Remove-Module -Name $ModuleName -Verbose:$False -ErrorAction SilentlyContinue
 Import-Module -Name $ModuleName -MinimumVersion $ModuleVersion -Verbose:$False
+#region PROGRAM
+$Start = Get-Date
+Write-Host "============================= START ==============================" -Foregroundcolor Magenta
+
+###############################################
+#### ENTER HERE THE COMMAND TO TEST / DEBUG ###
+###############################################
+
+Write-Host "============================== END ===============================" -Foregroundcolor Magenta
+Write-Host "The program took : $($TimeSpent.TotalSeconds)ms to execute" -foregroundColor Yellow
+#endregion PROGRAM
 '@
         if ($VerboseDebug -eq $True) {
             $DebugFileContent = @"
@@ -358,7 +369,7 @@ $($DebugFileContent)
             $DebugFileContent = @"
 $($DebugFileContent)
 Set-StrictMode -Version 'Latest'
-"@            
+"@
         }
         #endregion debug file content
         #endregion define file content
