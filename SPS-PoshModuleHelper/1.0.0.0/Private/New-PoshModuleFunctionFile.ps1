@@ -141,7 +141,6 @@ $($FunctionMinimalContent)
 }
 "@            
         }Else{
-            Write-Host "TO DO : HELPCONTENT" -ForegroundColor RED
             $FunctionContent = @"
 $($CommonHeader)
 Function $($Name) {
