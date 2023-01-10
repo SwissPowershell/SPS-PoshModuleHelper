@@ -12,7 +12,7 @@
     RootModule = 'SPS-PoshModuleHelper.psm1'
     
     # Version number of this module.
-    ModuleVersion = '1.0.0.0'
+    ModuleVersion = '1.0.0.1'
     
     # ID used to uniquely identify this module
     GUID = 'e6251c8a-d2b9-46d5-8228-0160fedb677d'
