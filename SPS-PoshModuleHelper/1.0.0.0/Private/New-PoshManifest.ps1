@@ -59,7 +59,7 @@ Class PMHPSData {
     }
 }
 Class PoshManifest {
-    #[String] ${Path}   
+    # [String] ${Path}
     [String] ${Name}
     [String] ${RootModule}
     [Version] ${ModuleVersion} = [Version]::New('1.0.0.0')
@@ -149,7 +149,7 @@ Class PoshManifest {
             Throw $_
         }
     }
-    [void] Parse([String] ${FilePath}) {
+    Hidden [void] ParseFromFile([String] ${FilePath}) {
         #To Do
         Try {
             $Manifest = Test-ModuleManifest -Path $FilePath -ErrorAction 'Stop' -Verbose:$False
@@ -171,11 +171,91 @@ Class PoshManifest {
                 $This.PrivateData.ReleaseNotes = $Manifest.ReleaseNotes
             }
         }
+        $This.Name = $This.RootModule.Replace('.psm1','')
+    }
+    Static [PoshManifest] Parse([String] ${FilePath}) {
+        $ManifestObject = [PoshManifest]::new()
+        $ManifestObject.ParseFromFile($FilePath)
+        Return $ManifestObject
     }
 }
 Function New-PoshManifest {
     [CMDLetBinding()]
-    Param()
+    Param(
+        [Parameter(Position = 0, Mandatory = $True)]
+        [String] ${Name},
+        [Parameter(Position = 1, Mandatory = $False)]
+        [String] ${RootModule},
+        [Parameter(Position = 2, Mandatory = $False)]
+        [Version] ${ModuleVersion} = [Version]::New('1.0.0.0'),
+        [Parameter(Position = 3, Mandatory = $False)]
+        [GUID] ${Guid} = "$([GUID]::NewGuid())",
+        [Parameter(Position = 4, Mandatory = $False)]
+        [String] ${Author} = "$($($Env:UserName.Substring(0,1)).ToUpper())$($Env:UserName.Substring(1))",
+        [Parameter(Position = 5, Mandatory = $False)]
+        [String] ${CompanyName} = "$($($Env:UserName.Substring(0,1)).ToUpper())$($Env:UserName.Substring(1))''s Company",
+        [Parameter(Position = 6, Mandatory = $False)]
+        [String] ${Copyright} = "(c) $(Get-Date -Format yyyy) $($($Env:UserName.Substring(0,1)).ToUpper())$($Env:UserName.Substring(1))''s Company",
+        [Parameter(Position = 7, Mandatory = $False)]
+        [String] ${Description},
+        [Parameter(Position = 8, Mandatory = $False)]
+        [Version] ${PowerShellVersion},
+        [Parameter(Position = 9, Mandatory = $False)]
+        [Version] ${PowerShellHostVersion},
+        [Parameter(Position = 10, Mandatory = $False)]
+        [String] ${PowerShellHostName},
+        [Parameter(Position = 11, Mandatory = $False)]
+        [Version] ${DotNetFrameworkVersion},
+        [Parameter(Position = 12, Mandatory = $False)]
+        [String] ${CLrVersion},
+        [Parameter(Position = 13, Mandatory = $False)]
+        [Nullable[PMHProcessArchitecture]] ${ProcessorArchitecture},
+        [Parameter(Position = 14, Mandatory = $False)]
+        [Object] ${RequiredModules},
+        [Parameter(Position = 15, Mandatory = $False)]
+        [String[]] ${RequiredAssemblies},
+        [Parameter(Position = 16, Mandatory = $False)]
+        [String[]] ${ScriptsToProcess},
+        [Parameter(Position = 17, Mandatory = $False)]
+        [String[]] ${TypeToProcess},
+        [Parameter(Position = 18, Mandatory = $False)]
+        [String[]] ${FormatToProcess},
+        [Parameter(Position = 19, Mandatory = $False)]
+        [Object[]] ${NestedModules},
+        [Parameter(Position = 20, Mandatory = $False)]
+        [String[]] ${FunctionsToExport},
+        [Parameter(Position = 21, Mandatory = $False)]
+        [String[]] ${CmdletsToExport},
+        [Parameter(Position = 22, Mandatory = $False)]
+        [String[]] ${VariablesToExport},
+        [Parameter(Position = 23, Mandatory = $False)]
+        [String[]] ${AliasesToExport},
+        [Parameter(Position = 24, Mandatory = $False)]
+        [String[]] ${DscRessourcesToExport},
+        [Parameter(Position = 25, Mandatory = $False)]
+        [Object[]] ${ModuleList},
+        [Parameter(Position = 26, Mandatory = $False)]
+        [String[]] ${FileList},
+        [Parameter(Position = 27, Mandatory = $False)]
+        [PMHPSData] ${PrivateData} = [PMHPSData]::New(),
+        [Parameter(Position = 28, Mandatory = $False)]
+        [String] ${HelpInfoUri},
+        [Parameter(Position = 29, Mandatory = $False)]
+        [String] ${DefaultCommandPrefix},
+        [Parameter(Position = 30, Mandatory = $False)]
+        [Nullable[PMHPSEditions]] ${CompatiblePSEditions},
+        [Parameter(Position = 31, Mandatory = $False)]
+        [String[]] ${Tags},
+        [Parameter(Position = 32, Mandatory = $False)]
+        [URI] ${LicenseUri},
+        [Parameter(Position = 33, Mandatory = $False)]
+        [URI] ${ProjectUri},
+        [Parameter(Position = 34, Mandatory = $False)]
+        [URI] ${IconUri},
+        [Parameter(Position = 35, Mandatory = $False)]
+        [String] ${ReleaseNotes}
+
+    )
     BEGIN {
         #region Function initialisation DO NOT REMOVE
         [String] ${FunctionName} = $MyInvocation.MyCommand
@@ -187,6 +267,44 @@ Function New-PoshManifest {
         #region Function Processing DO NOT REMOVE
         Write-Verbose "Processing : $($FunctionName)"
         #region Function Processing DO NOT REMOVE
+        $Object = [PoshManifest]::New()
+        $Object.Name = $Name
+        $Object.RootModule = $RootModule
+        $Object.ModuleVersion = $ModuleVersion
+        $Object.Guid = $Guid
+        $Object.Author = $Author
+        $Object.CompanyName = $CompanyName
+        $Object.Copyright = $Copyright
+        $Object.Description = $Description
+        $Object.PowerShellVersion = $PowerShellVersion
+        $Object.PowerShellHostVersion = $PowerShellHostVersion
+        $Object.PowerShellHostName = $PowerShellHostName
+        $Object.DotNetFrameworkVersion = $DotNetFrameworkVersion
+        $Object.CLrVersion = $CLrVersion
+        $Object.ProcessorArchitecture = $ProcessorArchitecture
+        $Object.RequiredModules = $RequiredModules
+        $Object.RequiredAssemblies = $RequiredAssemblies
+        $Object.ScriptsToProcess = $ScriptsToProcess
+        $Object.TypeToProcess = $TypeToProcess
+        $Object.FormatToProcess = $FormatToProcess
+        $Object.NestedModules = $NestedModules
+        $Object.FunctionsToExport = $FunctionsToExport
+        $Object.CmdletsToExport = $CmdletsToExport
+        $Object.VariablesToExport = $VariablesToExport
+        $Object.AliasesToExport = $AliasesToExport
+        $Object.DscRessourcesToExport = $DscRessourcesToExport
+        $Object.ModuleList = $ModuleList
+        $Object.FileList = $FileList
+        $Object.PrivateData = $PrivateData
+        $Object.HelpInfoUri = $HelpInfoUri
+        $Object.DefaultCommandPrefix = $DefaultCommandPrefix
+        $Object.CompatiblePSEditions = $CompatiblePSEditions
+
+        $Object.PrivateData.Tags = $Tags
+        $Object.PrivateData.IconUri = $IconUri
+        $Object.PrivateData.LicenseUri = $LicenseUri
+        $Object.PrivateData.ProjectUri = $ProjectUri
+        $Object.PrivateData.ReleaseNotes = $ReleaseNotes
     }
     END {
         #region Function closing  DO NOT REMOVE
@@ -220,9 +338,12 @@ Function New-PoshManifest {
         }
         Write-Verbose "Ending : $($FunctionName) - TimeSpent : $($TimeSpentString)"
         #endregion Function closing  DO NOT REMOVE
+        Return $Object
     }
 }
 
+$Test = New-PoshManifest -Name 'HelloWorld'
+BREAK
 $Test = [PoshManifest]::New('HelloWorld')
 $Test.FunctionsToExport = @("A","B","C")
 $Test.ToString()
@@ -230,6 +351,8 @@ $TestManifestResult = $Test.Save('C:\Temp\Toto\tutu\tata\turlututu.psd1')
 $TestManifestResult
 
 
-$NewManifest = [PoshManifest]::New()
-$NewManifest.Parse('C:\Temp\Toto\tutu\tata\turlututu.psd1')
+# $NewManifest = [PoshManifest]::New()
+# $NewManifest.ParseFromFile('C:\Temp\Toto\tutu\tata\turlututu.psd1')
+# $NewManifest
+$NewManifest = [PoshManifest]::Parse('C:\Temp\Toto\tutu\tata\turlututu.psd1')
 $NewManifest
