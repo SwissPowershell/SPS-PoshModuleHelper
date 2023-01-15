@@ -27,7 +27,7 @@ Class PMHPSData {
     }
     [String] ParamToString ([String] ${Name}) {
         $Value = $This.$Name
-        If ($Null -eq $Value) {
+        If ($Null -like $Value) {
             $RetVal = ''
         }Else{
             If ($Value -is [String[]]) {
@@ -45,16 +45,17 @@ Class PMHPSData {
         Return $RetVal
     }
     [String] ToString() {
-        $RetVal = @"
-        PSData = @{
-            $($This.ParamToString('Tags'))
-            $($This.ParamToString('LicenseUri'))
-            $($This.ParamToString('ProjectUri'))
-            $($This.ParamToString('IconUri'))
-            $($This.ParamToString('ReleaseNotes'))
-        }
-"@
-        Return $RetVal
+#         $RetVal2 = "PSData = @{$(($This | Get-Member -MemberType Properties | ForEach-Object ($This.$_)) -join ',')}"        
+#         $RetVal = @"
+#         PSData = @{
+#             $($This.ParamToString('Tags'))
+#             $($This.ParamToString('LicenseUri'))
+#             $($This.ParamToString('ProjectUri'))
+#             $($This.ParamToString('IconUri'))
+#             $($This.ParamToString('ReleaseNotes'))
+#         }
+# "@
+        Return "{PSData}"
     }
 }
 Class PoshManifest {
@@ -86,7 +87,7 @@ Class PoshManifest {
     [String[]] ${DscRessourcesToExport}
     [Object[]] ${ModuleList}
     [String[]] ${FileList}
-    [PMHPSData] ${PrivateData}
+    [PMHPSData] ${PrivateData} = [PMHPSData]::New()
     [String] ${HelpInfoUri}
     [String] ${DefaultCommandPrefix}
     [Nullable[PMHPSEditions]] ${CompatiblePSEditions}
@@ -148,6 +149,29 @@ Class PoshManifest {
             Throw $_
         }
     }
+    [void] Parse([String] ${FilePath}) {
+        #To Do
+        Try {
+            $Manifest = Test-ModuleManifest -Path $FilePath -ErrorAction 'Stop' -Verbose:$False
+        }
+        Catch {
+            Throw "Unable to parse manifest: $($_.Exception.Message)"
+        }
+        $AllProperties = $This | Get-Member -MemberType 'Property' | Select-Object -ExpandProperty 'Name' | Where-Object {$_ -Notin @('CompatiblePSEditions','Name')}
+        ForEach ($Property in $AllProperties) {
+            if ($Property -ne 'PrivateData') {
+                if ($Manifest.$Property -notlike $null) {
+                    $This.$Property = $Manifest.$Property
+                }
+            }Else{
+                $This.PrivateData.Tags = $Manifest.Tags
+                $This.PrivateData.LicenseUri = $Manifest.LicenseUri
+                $This.PrivateData.ProjectUri = $Manifest.ProjectUri
+                $This.PrivateData.IconUri = $Manifest.IconUri
+                $This.PrivateData.ReleaseNotes = $Manifest.ReleaseNotes
+            }
+        }
+    }
 }
 Function New-PoshManifest {
     [CMDLetBinding()]
@@ -204,3 +228,8 @@ $Test.FunctionsToExport = @("A","B","C")
 $Test.ToString()
 $TestManifestResult = $Test.Save('C:\Temp\Toto\tutu\tata\turlututu.psd1')
 $TestManifestResult
+
+
+$NewManifest = [PoshManifest]::New()
+$NewManifest.Parse('C:\Temp\Toto\tutu\tata\turlututu.psd1')
+$NewManifest
