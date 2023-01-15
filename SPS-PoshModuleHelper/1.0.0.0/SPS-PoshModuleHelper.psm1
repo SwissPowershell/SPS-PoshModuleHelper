@@ -6,22 +6,19 @@ $EnumPS1 = @(Get-ChildItem -Path "$($PSScriptRoot)\Enum\*.ps1" -ErrorAction Sile
 $ClassPS1 = @(Get-ChildItem -Path "$($PSScriptRoot)\Class\*.ps1" -ErrorAction SilentlyContinue -Exclude $FileToExclude)
 
 
-ForEach ($PS1 in $PublicPS1) {
-    Write-Verbose "Importing Public PS1 : $($PS1.BaseName)"
-    . $PS1.Fullname
-}
-
-ForEach ($PS1 in $PrivatePS1) {
-    Write-Verbose "Importing Private PS1 : $($PS1.BaseName)"
-    . $PS1.Fullname
-}
-
 ForEach ($PS1 in $EnumPS1) {
     Write-Verbose "Importing Enum PS1 : $($PS1.BaseName)"
     . $PS1.Fullname
 }
-
 ForEach ($PS1 in $ClassPS1) {
     Write-Verbose "Importing Class PS1 : $($PS1.BaseName)"
+    . $PS1.Fullname
+}
+ForEach ($PS1 in $PrivatePS1) {
+    Write-Verbose "Importing Private PS1 : $($PS1.BaseName)"
+    . $PS1.Fullname
+}
+ForEach ($PS1 in $PublicPS1) {
+    Write-Verbose "Importing Public PS1 : $($PS1.BaseName)"
     . $PS1.Fullname
 }
