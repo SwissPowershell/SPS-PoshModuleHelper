@@ -57,7 +57,6 @@ Class PMHPSData {
         Return "{PSData}"
     }
 }
-
 Class PMHCmdLetBinding {
     [String] ${DefaultParameterSetName}
     [PMHConfirmImpact] ${ConfirmImpact} = 'None'
