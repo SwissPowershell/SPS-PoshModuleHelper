@@ -19,33 +19,44 @@ Class PMHNamedArgument {
         if ($This.ExpressionOmitted -eq $True) {
             $RetVal = "$($This.Name)"
         }Else{
-            if ($This.Value.StaticType.Name -eq 'String'){
-                if ($This.Value.StringConstantType -eq 'SingleQuoted') {
-                    $RetVal = "$($This.Name) = '$($This.Value.Value)'"
-                }Else{
-                    $RetVal = "$($This.Name) = `"$($This.Value.Value)`""
-                }
-            }ElseIf(($This.Value.StaticType.Name -eq 'Int32') -or ($This.Value.StaticType.Name -eq 'UInt32') -or ($This.Value.StaticType.Name -eq 'Int64')){
-                $RetVal = "$($This.Name) = $($This.Value.Value)"
-            }Elseif ($This.Value.StaticType.Name -eq 'Array'){
-                $ValueContent = @()
-                ForEach ($Valuestr in $This.Value.Value) {
-                    if ($ValueStr -is [String]) {
-                        if ($ValueStr -like '*"*') {
-                            $ValueContent += "'$($ValueStr)'"
-                        }Else{
-                            $ValueContent += "`"$($ValueStr)`""
-                        }
-                    }Elseif ($ValueStr -is [Int32]) {
-                        $ValueContent += "$($ValueStr)"
+            Switch ($This.Value.StaticType.Name) {
+                {$_ -eq 'String'} {
+                    if ($This.Value.StringConstantType -eq 'SingleQuoted') {
+                        $RetVal = "$($This.Name) = '$($This.Value.Value)'"
+                    }Else{
+                        $RetVal = "$($This.Name) = `"$($This.Value.Value)`""
                     }
+                    BREAK
                 }
-                $ValueContentStr = $ValueContent -join ','
-                $RetVal = "$($This.Name) = @($($ValueContentStr))"
-            }Elseif ($This.Value.StaticType.Name -eq 'Boolean'){
-                $RetVal = "$($This.Name) = `$$($This.Value.Value.ToString())"
-            }ElseIf ($This.Value.StaticType.Name -eq 'Object'){
-                $RetVal = "$($This.Name) = $($This.Value.ToString())"
+                {($_ -eq 'Int32') -or ($_ -eq 'UInt32') -or ($_ -eq 'Int64')} {
+                    $RetVal = "$($This.Name) = $($This.Value.Value)"
+                    BREAK
+                }
+                {$_ -eq 'Array'}  {
+                    $ValueContent = @()
+                    ForEach ($Valuestr in $This.Value.Value) {
+                        if ($ValueStr -is [String]) {
+                            if ($ValueStr -like '*"*') {
+                                $ValueContent += "'$($ValueStr)'"
+                            }Else{
+                                $ValueContent += "`"$($ValueStr)`""
+                            }
+                        }Elseif ($ValueStr -is [Int32]) {
+                            $ValueContent += "$($ValueStr)"
+                        }
+                    }
+                    $ValueContentStr = $ValueContent -join ','
+                    $RetVal = "$($This.Name) = @($($ValueContentStr))"
+                    BREAK
+                }
+                {$_ -eq 'Boolean'} {
+                    $RetVal = "$($This.Name) = `$$($This.Value.Value.ToString())"
+                    BREAK
+                }
+                Default {
+                    $RetVal = "$($This.Name) = $($This.Value.ToString())"
+                    BREAK
+                }
             }
         }
         Return $RetVal
@@ -67,12 +78,15 @@ Class PMHAttribute {
             $NamedArgumentString = ($This.Arguments[0].ToString())
             $RetVal = "[$($This.Name)($($NamedArgumentString))]"
         }Elseif ($This.Arguments.count -gt 1){
-            $NamedArgumentString = ($This.Arguments | ForEach-Object {$_.ToString()}) -join ",`r`n`t"
-            $RetVal = @"
-[$($This.Name)(
-`t$($NamedArgumentString)
-)]
-"@
+            $Array = @("[$($This.Name)(")
+            $ArrayArg = @()
+            ForEach ($Argument in $This.Arguments) {
+                $ArrayArg += "`t$($Argument.ToString())"
+            }
+            $ArrayStr = $ArrayArg -join ",`r`n"
+            $Array += $ArrayStr
+            $Array += ")]"
+            $RetVal = $Array -join "`r`n"
         }Else{
             $RetVal = "[$($This.Name)()]"
         }
@@ -94,12 +108,15 @@ Class PMHParamParameter {
         if ($This.Arguments.Count -eq 1) {
             $RetVal = "[Parameter($($This.Arguments[0].ToString()))]"
         }ElseIf($This.Arguments.count -gt 1) {
-            $ParametersString = ($This.Arguments | ForEach-Object {$_.ToString()}) -join ",`r`n`t"
-            $RetVal = @"
-[Parameter(
-`t$($ParametersString)
-)]
-"@
+            $Array = @("[Parameter(")
+            $ArgumentArray = @()
+            ForEach ($Argument in $This.Arguments) {
+                $ArgumentArray += "`t$($ARgument.ToString())"
+            }
+            $ArgumentStr = $ArgumentArray -join ",`r`n"
+            $Array += $ArgumentStr
+            $Array += ")]"
+            $RetVal = $Array -join "`r`n"
         }
         Return $RetVal
     }
@@ -134,7 +151,7 @@ Class PMHParamAttribute {
                 $RetVal = "[$($This.Name)($($ValueStr))]"
             }
             if ($This.NamedArguments.Count -gt 0) {
-                Write-Verbose "NamedArguments"
+                Write-Warning 'NamedArguments not handled ! in [PMHParamAttribute]'
             }
 
         }Else{
@@ -162,10 +179,14 @@ Class PMHParameter {
     [String] ToString() {
         $RetVal = ''
         $ParamArray = @()
-        $NotTypedAttributes = $This.Attributes | Where-Object {$_.IsTypeContraint -eq $False}
+        $NotTypedAttributes = @($This.Attributes | Where-Object {$_.IsTypeContraint -eq $False})
         $TypedAttributes = @($This.Attributes | Where-Object {$_.IsTypeContraint -eq $True})
-        $ParamArray += $This.Parameters | ForEach-Object {$_.ToString()}
-        $ParamArray += $NotTypedAttributes | ForEach-Object {$_.ToString()}
+        if ($This.Parameters.count -gt 0) {
+            $ParamArray += $This.Parameters | ForEach-Object {$_.ToString()}
+        }
+        if ($NotTypedAttributes.count -gt 0){
+            $ParamArray += $NotTypedAttributes | ForEach-Object {$_.ToString()}
+        }
         if ($TypedAttributes.Count -gt 0) {
             $TypeArray = $TypedAttributes | ForEach-Object {"[$($_.Name)]"}
             $ParamArray += "$($TypeArray -join ' ') `${$($This.Name)}"
@@ -180,6 +201,7 @@ Class PMHDynamicParamBlock {
     PMHDynamicParamBlock() {}
     Static [PMHDynamicParamBlock] FromAST($AST) {
         $Object = [PMHDynamicParamBlock]::New()
+        Write-Warning 'PMHDynamicParamBlock is not handled yet'
         Return $Object
     }
 }
@@ -193,20 +215,106 @@ Class PMHParamBlock {
         $Object.Parameters = $AST.Parameters | ForEach-Object {[PMHParameter]::FromAST($_)}
         Return $Object
     }
+    [String] ToString() {
+        Return $This.ToString('')
+    }
+    [String] ToString($String) {
+        $Lines = @()
+        ForEach($Attribute in $This.Attributes) {
+            $AttributeArray = $Attribute.ToString() -split "`r`n"
+            ForEach ($AttributeLine in $AttributeArray) {
+                $Lines += "$($String)$($AttributeLine)"
+            }
+        }
+        if ($This.Parameters.count -eq 0) {
+            $Lines += "$($String)Param()"
+        }Else{
+            $Lines += "$($String)Param("
+            $ParamStrings = @()
+            ForEach($Parameter in $This.Parameters) {
+                $ParamArray = $Parameter.ToString() -split "`r`n"
+                $ParamArray2 = @()
+                ForEach($Param in $ParamArray) {
+                    $ParamArray2 += "$($String)`t$($Param)"
+                }
+                $ParamStr = $ParamArray2 -join "`r`n"
+                $ParamStrings += $ParamStr
+            }
+            $ParamLine = $ParamStrings -join ",`r`n"
+            $Lines += $ParamLine
+            $Lines += "$($String))"
+        }
+        $RetVal = $Lines -join "`r`n"
+        Return $RetVal
+    }
+}
+Class PMHNamedBlock {
+    [String] ${BlockKind}
+    [String] ${Content}
+    PMHNamedBlock(){}
+    Static [PMHNamedBlock] FromAST($AST) {
+        $Object = [PMHNamedBlock]::New()
+        $Object.BlockKind = $AST.BlockKind
+        $Object.Content = $AST.Extent.Text
+        Return $Object
+    }
+    [String] ToString() {
+        Return $This.ToString('')
+    }
+    [String] ToString($String) {
+        $Lines = $This.Content -split "`n"
+        $NewLines = @("$($String)$($Lines[0])")
+        $NextLines = $Lines[1..$($Lines.count -2)]
+        ForEach ($Line in $NextLines) {
+            if ($Line.StartsWith("        ")) {
+                #The Line is an allready Tabbed Line
+                $NewLines += "$($String)$($Line)"
+            }Else{
+                #The line is not tabbed (probably a here string line)
+                $NewLines += "$($Line)"
+            }
+        }
+        $NewLines += "$($String)$($Lines[$Lines.Count - 1].Trim())"
+        $RetVal = $NewLines -join "`r`n"
+        Return $RetVal
+    }
+}
+Class PMHInLineHelpBlock {
+    PMHInLineHelpBlock() {}
+    Static [PMHInLineHelpBlock] FromAST($AST) {
+        $Object = [PMHInLineHelpBlock]::New()
+        Return $Object
+    }
 }
 Class PMHFunction {
     [String] ${Name}
     [PMHParamBlock] ${ParamBlock}
     [PMHDynamicParamBlock] ${DynamicParamBlock}
-    ${StartBlock}
-    ${ProcessBlock}
-    ${EndBlock}
+    [PMHInLineHelpBlock] ${HelpBlock}
+    [PMHNamedBlock] ${BeginBlock}
+    [PMHNamedBlock] ${ProcessBlock}
+    [PMHNamedBlock] ${EndBlock}
     PMHFunction() {}
     Static [PMHFunction] FromAST($AST) {
         $Object = [PMHFunction]::new()
         $Object.Name = $AST.Name
         $Object.ParamBlock = [PMHParamBlock]::FromAST($AST.Body.ParamBlock)
+        $Object.DynamicParamBlock = [PMHDynamicParamBlock]::FromAST($AST.Body.DynamicParamBlock)
+        $Object.BeginBlock = [PMHNamedBlock]::FromAST($AST.Body.BeginBlock)
+        $Object.ProcessBlock = [PMHNamedBlock]::FromAST($AST.Body.ProcessBlock)
+        $Object.EndBlock = [PMHNamedBlock]::FromAST($AST.Body.EndBlock)
         Return $Object
+    }
+    [String] ToString() {
+        $RetVal = @"
+Function $($This.Name) {
+$($This.ParamBlock.ToString("`t"))
+$($This.BeginBlock.ToString("`t"))
+$($This.ProcessBlock.ToString("`t"))
+$($This.EndBlock.ToString("`t"))
+}
+"@
+        Return $RetVal
     }
 }
 Class PMHEnum {
@@ -268,10 +376,10 @@ Line : $($_.InvocationInfo.ScriptLineNumber)
             Write-Error -Message $ErrorMessage
             BREAK
         }
-        
+
         $AllUnFilteredTypeDefinitionAST = @(($ScriptBlockAST.FindAll({$Args[0].GetType().Name -eq 'TypeDefinitionAst'}, $true)))
         $AllUnFilteredFunctionDefinitionAST = @(($ScriptBlockAST.FindAll({$Args[0].GetType().Name -eq 'FunctionDefinitionAst'}, $true)) | Where-Object {($_.Extent.Text.StartsWith('Function'))}) # -and ($_.Parent.Extent.Text -eq $Content)})
-        
+
         #Search the higher parent to filter what is in first level
         Try {
             $FunctionsParentHigherLine = $AllUnFilteredFunctionDefinitionAST.Parent.Extent.StartLineNumber | Sort-Object | Select-Object -First 1
