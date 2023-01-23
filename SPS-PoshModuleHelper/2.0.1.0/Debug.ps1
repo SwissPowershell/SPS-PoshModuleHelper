@@ -231,7 +231,7 @@ $($FunctionsDescription)
     }
 }
 '@
-$Path = 'C:\Users\user\Documents\WindowsPowerShell\Modules\SPS-PoshModuleHelper\2.0.0.0\SPS-PoshModuleHelper.psm1'
+$Path = 'C:\Users\user\Documents\WindowsPowerShell\Modules\SPS-PoshModuleHelper\2.0.1.0\TestFile.ps1'
 $Result = ConvertTo-PoshObject -Path $Path -Verbose
 $Result
 

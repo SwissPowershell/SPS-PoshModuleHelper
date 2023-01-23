@@ -16,20 +16,20 @@ Class PMHNamedArgument {
     }
     [String] ToString() {
         $RetVal = ''
-        if ($This.ExpressionOmitted) {
+        if ($This.ExpressionOmitted -eq $True) {
             $RetVal = "$($This.Name)"
         }Else{
-            if ($This.Argument.StaticType.Name -eq 'String'){
-                if ($This.Argument.StringConstantType -eq 'SingleQuoted') {
-                    $RetVal = "$($This.Name) = '$($This.Argument.Value)'"
+            if ($This.Value.StaticType.Name -eq 'String'){
+                if ($This.Value.StringConstantType -eq 'SingleQuoted') {
+                    $RetVal = "$($This.Name) = '$($This.Value.Value)'"
                 }Else{
-                    $RetVal = "$($This.Name) = `"$($This.Argument.Value)`""
+                    $RetVal = "$($This.Name) = `"$($This.Value.Value)`""
                 }
-            }Elseif ($This.Argument.StaticType.Name -eq 'Boolean'){
-                $RetVal = "$($This.Name) = `$$($This.Argument.Value.ToString())"
-            }Elseif ($This.Argument.StaticType.Name -eq 'Array'){
+            }ElseIf(($This.Value.StaticType.Name -eq 'Int32') -or ($This.Value.StaticType.Name -eq 'UInt32') -or ($This.Value.StaticType.Name -eq 'Int64')){
+                $RetVal = "$($This.Name) = $($This.Value.Value)"
+            }Elseif ($This.Value.StaticType.Name -eq 'Array'){
                 $ValueContent = @()
-                ForEach ($Valuestr in $This.Argument.Value) {
+                ForEach ($Valuestr in $This.Value.Value) {
                     if ($ValueStr -is [String]) {
                         if ($ValueStr -like '*"*') {
                             $ValueContent += "'$($ValueStr)'"
@@ -42,6 +42,10 @@ Class PMHNamedArgument {
                 }
                 $ValueContentStr = $ValueContent -join ','
                 $RetVal = "$($This.Name) = @($($ValueContentStr))"
+            }Elseif ($This.Value.StaticType.Name -eq 'Boolean'){
+                $RetVal = "$($This.Name) = `$$($This.Value.Value.ToString())"
+            }ElseIf ($This.Value.StaticType.Name -eq 'Object'){
+                $RetVal = "$($This.Name) = $($This.Value.ToString())"
             }
         }
         Return $RetVal
@@ -54,44 +58,122 @@ Class PMHAttribute {
     Static [PMHAttribute] FromAST($AST) {
         $Object = [PMHAttribute]::New()
         $Object.Name = $AST.TypeName
-        $Object.Arguments = $AST.NamedArguments | ForEach-OBject {[PMHNamedArgument]::FromAST($_)}
+        $Object.Arguments = $AST.NamedArguments | ForEach-Object {[PMHNamedArgument]::FromAST($_)}
         Return $Object
     }
     [String] ToString() {
-        $NamedArgumentString = $This.Arguments.ToString() -join ", "
-        $RetVal = "[$($This.Name)($($NamedArgumentString))]"
+        $RetVal = ''
+        if ($This.Arguments.count -eq 1){
+            $NamedArgumentString = ($This.Arguments[0].ToString())
+            $RetVal = "[$($This.Name)($($NamedArgumentString))]"
+        }Elseif ($This.Arguments.count -gt 1){
+            $NamedArgumentString = ($This.Arguments | ForEach-Object {$_.ToString()}) -join ",`r`n`t"
+            $RetVal = @"
+[$($This.Name)(
+`t$($NamedArgumentString)
+)]
+"@
+        }Else{
+            $RetVal = "[$($This.Name)()]"
+        }
         Return $RetVal
     }
 }
 Class PMHParamParameter {
+    [PMHNamedArgument[]] ${Arguments}
     PMHParamParameter() {}
     Static [PMHParamParameter] FromAST($AST) {
         $Object = [PMHParamParameter]::New()
+        if ($AST -is [System.Management.Automation.Language.AttributeAst]){
+            $Object.Arguments = $AST.NamedArguments | ForEach-Object {[PMHNamedArgument]::FromAST($_)}
+        }
         Return $Object
+    }
+    [String] ToString() {
+        $RetVal = ''
+        if ($This.Arguments.Count -eq 1) {
+            $RetVal = "[Parameter($($This.Arguments[0].ToString()))]"
+        }ElseIf($This.Arguments.count -gt 1) {
+            $ParametersString = ($This.Arguments | ForEach-Object {$_.ToString()}) -join ",`r`n`t"
+            $RetVal = @"
+[Parameter(
+`t$($ParametersString)
+)]
+"@
+        }
+        Return $RetVal
     }
 }
 Class PMHParamAttribute {
+    [String] ${Name}
+    [Object[]] ${PositionalArguments}
+    [PMHNamedArgument[]] ${NamedArguments}
+    [Boolean] ${IsTypeContraint}
     PMHParamAttribute() {}
     Static [PMHParamAttribute] FromAST($AST) {
         $Object = [PMHParamAttribute]::New()
+        $Object.Name = $AST.TypeName.Name
+        if ($AST -is [System.Management.Automation.Language.AttributeAst]) {
+            ForEach ($Argument in $AST.PositionalArguments) {
+                $Object.PositionalArguments += $Argument
+            }
+            $Object.NamedArguments = $AST.NamedArguments | ForEach-Object {[PMHNamedArgument]::FromAST($_)}
+        }Elseif ($AST -is [System.Management.Automation.Language.TypeConstraintAst]){
+            $Object.IsTypeContraint = $True
+        }
         Return $Object
+    }
+    [String] ToString() {
+        $RetVal = ''
+        if ($This.IsTypeContraint -eq $False) {
+            if (($This.PositionalArguments.Count -eq 0) -and ($This.NamedArguments.Count -eq 0)) {
+                $RetVal = "[$($This.Name)()]"
+            }
+            if ($This.PositionalArguments.Count -gt 0) {
+                $ValueStr = ($This.PositionalArguments | Select-Object -ExpandProperty 'Value') -Join ','
+                $RetVal = "[$($This.Name)($($ValueStr))]"
+            }
+            if ($This.NamedArguments.Count -gt 0) {
+                Write-Verbose "NamedArguments"
+            }
+
+        }Else{
+            $RetVal = "[$($This.Name)]"
+        }
+        Return $RetVal
     }
 }
 Class PMHParameter {
     [String] ${Name}
     [String] ${TypeName}
     [Object] ${DefaultValue}
-    [PMHAttribute] ${Parameter}
-    [PMHAttribute[]] ${Attributes}
+    [PMHParamParameter[]] ${Parameters}
+    [PMHParamAttribute[]] ${Attributes}
     PMHParameter() {}
     Static [PMHParameter] FromAST($AST) {
         $Object = [PMHParameter]::New()
-        $Object.Name = $Ast.Name
+        $Object.Name = $Ast.Name.VariablePath
         $Object.TypeName = $Ast.StaticType.Name
         $Object.DefaultValue = $Ast.DefaultValue
-        $Object.Parameter = $AST.Parameter.Attributes | Where-Object {$_.TypeName.Name -eq 'Parameter'} | ForEach-Object {[PMHAttribute]::FromAST($_)}
-        $Object.Attributes = $AST.Parameter.Attributes | Where-Object {$_.TypeName.Name -ne 'Parameter'} | ForEach-Object {[PMHAttribute]::FromAST($_)}
+        $Object.Parameters = $AST.Attributes | Where-Object {$_.TypeName.Name -eq 'Parameter'} | ForEach-Object {[PMHParamParameter]::FromAST($_)}
+        $Object.Attributes = $AST.Attributes | Where-Object {$_.TypeName.Name -ne 'Parameter'} | ForEach-Object {[PMHParamAttribute]::FromAST($_)}
         Return $Object
+    }
+    [String] ToString() {
+        $RetVal = ''
+        $ParamArray = @()
+        $NotTypedAttributes = $This.Attributes | Where-Object {$_.IsTypeContraint -eq $False}
+        $TypedAttributes = @($This.Attributes | Where-Object {$_.IsTypeContraint -eq $True})
+        $ParamArray += $This.Parameters | ForEach-Object {$_.ToString()}
+        $ParamArray += $NotTypedAttributes | ForEach-Object {$_.ToString()}
+        if ($TypedAttributes.Count -gt 0) {
+            $TypeArray = $TypedAttributes | ForEach-Object {"[$($_.Name)]"}
+            $ParamArray += "$($TypeArray -join ' ') `${$($This.Name)}"
+        }Else{
+            $ParamArray += "`${$($This.Name)}"
+        }
+        $RetVal = "$($ParamArray -join "`r`n")"
+        Return $RetVal
     }
 }
 Class PMHDynamicParamBlock {
@@ -107,8 +189,8 @@ Class PMHParamBlock {
     PMHParamBlock() {}
     Static [PMHParamBlock] FromAST($AST) {
         $Object = [PMHParamBlock]::New()
-        $Object.Attributes = $Ast | ForEach-Object {[PMHAttribute]::FromAST($_)}
-        $Object.Parameters = $Ast | ForEach-Object {[PMHParameter]::FromAST($_)}
+        $Object.Attributes = $AST.Attributes | ForEach-Object {[PMHAttribute]::FromAST($_)}
+        $Object.Parameters = $AST.Parameters | ForEach-Object {[PMHParameter]::FromAST($_)}
         Return $Object
     }
 }
@@ -123,7 +205,7 @@ Class PMHFunction {
     Static [PMHFunction] FromAST($AST) {
         $Object = [PMHFunction]::new()
         $Object.Name = $AST.Name
-        $Object.ParamBlock = [PMHParamBlock]::FromAST($AST.ParamBlock)
+        $Object.ParamBlock = [PMHParamBlock]::FromAST($AST.Body.ParamBlock)
         Return $Object
     }
 }
